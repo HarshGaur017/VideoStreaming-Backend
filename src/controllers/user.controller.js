@@ -24,7 +24,7 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    const existingUser = User.findOne({
+    const existingUser = await User.findOne({
         $or: [{ username }, { email }]
     })
     console.log("existingUser", existingUser);
@@ -32,7 +32,7 @@ const registerUser = asyncHandler( async (req, res) => {
     if (existingUser) {
         throw new ApiError(409, "User already exist");
     }
-
+    console.log("req.files", req.files);
     const avatarLocalPath = req?.files?.avatar[0]?.path;
     const coverImageLocalPath = req?.files?.coverImage[0]?.path;
 
