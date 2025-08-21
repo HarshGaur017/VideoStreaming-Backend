@@ -25,4 +25,19 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadOnCloudinary };
+const deleteOnCloudinary = async (imageUrl) => {
+  try {
+    if (!imageUrl) return;
+
+    const parts = imageUrl.split("/");
+    const fileName = parts.pop();
+    const folder = parts.slice(parts.indexOf("upload") + 1).join("/");
+    const publicId = folder ? `${folder}/${fileName.split(".")[0]}` : fileName.split(".")[0];
+    await cloudinary.uploader.destroy(publicId);
+    console.log(`Deleted OldImage: ${publicId}`);
+  } catch (error) {
+    console.error("Error while deleting the old image", error);
+  }
+};
+
+export { uploadOnCloudinary, deleteOnCloudinary };
