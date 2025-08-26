@@ -7,8 +7,45 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query;
   //TODO: get all videos based on query, sort, pagination
+
+  const filters = {}
+  if (query) {
+    filters.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } }
+    ]
+  }
+  if (userId) {
+    filters.user = userId
+  }
+
+  //Sorting
+  const sortOptions = {[sortBy]: sortType === "asc" ? 1 : -1}
+
+  //Pagination
+  const skip = (Number(page) - 1) * Number(limit);
+
+  //Query Videos
+  const videos = await Video.find(filters)
+  .sort(sortOptions)
+  .skip(skip)
+  .limit(Number(limit))
+
+  //Count total for pagination metadata
+  const totalVideos = await Video.countDocuments(filters)
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {videos, pagination: {
+    totalVideos,
+    totalPages: Math.ceil(totalVideos / Number(limit)),
+    currentPage: Number(page),
+    pageSize: Number(limit),
+    hasNextPage: Number(page) * Number(limit) < totalVideos,
+    hasPrevPage: Number(page) > 1
+  }}))
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
