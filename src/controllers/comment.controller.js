@@ -17,7 +17,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const pipeline = [
     {
       $match: {
-        video: mongoose.Types.ObjectId(videoId),
+        video: new mongoose.Types.ObjectId(videoId),
       },
     },
     {
@@ -65,7 +65,7 @@ const addComment = asyncHandler(async (req, res) => {
   // save comment to db
   // send response
 
-  const { content } = req.body;
+  const { content } = req.body
   const { videoId } = req.params;
 
   if (!content) {
@@ -81,7 +81,7 @@ const addComment = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, "video not found"));
   }
 
-  const comment = Comment.create({
+  const comment = await Comment.create({
     content,
     video: videoId,
     owner: req.user?._id,
@@ -116,7 +116,7 @@ const updateComment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "comment not found");
   }
 
-  await Comment.findByIdAndUpdate(
+  const updatedComment = await Comment.findByIdAndUpdate(
     commentId,
     {
       $set: {
@@ -130,7 +130,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, comment, "comment updated successfully"));
+    .json(new ApiResponse(200, updatedComment, "comment updated successfully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
