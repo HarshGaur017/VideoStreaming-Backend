@@ -58,11 +58,50 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
+
+  // validate channel
+  const channel = await User.findById(channelId);
+
+  if (!channel) {
+    throw new ApiError(404, "channel not found");
+  }
+
+  // fetch subscribers
+  const subscriptions = await Subscription.find({channel: channelId})
+  .populate("subscriber", "username, avatar, email");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {
+      channel: channel.username,
+      totalSubscribers: subscriptions.length,
+      subscribers: subscriptions.map((sub) => sub.subscriber),
+    }, "subscribers fetched successfully"));
+    
 });
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
+
+  // validate subscriber
+  const subscriber = await User.findById(subscriberId);
+
+  if (!subscriber) {
+    throw new ApiError(404, "subscriber not found");
+  }
+
+  // fetch subscribed channels
+  const subscriptions = await Subscription.find({subscriber: subscriberId})
+  .populate("channel", "username, avatar, email");
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {
+    subscriber: subscriber.username,
+    totalChannels: subscriptions.length,
+    channels: subscriptions.map((sub) => sub.channel),
+  }, "channels fetched successfully"));
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
